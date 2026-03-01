@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Rentabilidad</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --accent: #00e5a0;
+    --accent2: #7c3aed;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem 1rem 4rem;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: -10%;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(0,229,160,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeDown 0.6s ease;
+  }
+
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent), #00b4d8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header p {
+    color: var(--muted);
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 520px;
+    animation: fadeUp 0.5s ease;
+  }
+
+  .field {
+    margin-bottom: 1.4rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-wrap .symbol {
+    position: absolute;
+    left: 1rem;
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .input-wrap .unit {
+    position: absolute;
+    right: 1rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem 3rem 0.85rem 2.4rem;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,160,0.1);
+  }
+
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .tab.active {
+    background: rgba(0,229,160,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  button.calcular {
+    width: 100%;
+    padding: 1rem;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  button.calcular:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,229,160,0.3);
+  }
+
+  button.calcular:active {
+    transform: translateY(0);
+  }
+
+  /* Results */
+  .results {
+    width: 100%;
+    max-width: 520px;
+    margin-top: 1.5rem;
+    display: none;
+    animation: fadeUp 0.4s ease;
+  }
+
+  .results.show { display: block; }
+
+  .big-stat {
+    background: linear-gradient(135deg, rgba(0,229,160,0.08), rgba(0,180,216,0.05));
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 16px;
+    padding: 1.8rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .big-stat .label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .big-stat .value {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .big-stat .sub {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+  }
+
+  .stat-box .s-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .stat-box .s-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-box.profit .s-value { color: var(--accent); }
+
+  /* Chart */
+  .chart-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .chart-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 100px;
+  }
+
+  .bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .bar {
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    background: linear-gradient(to top, var(--accent2), var(--accent));
+    transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-height: 4px;
+  }
+
+  .bar-year {
+    font-size: 0.6rem;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Calculadora de<br>Rentabilidad</h1>
+  <p>Simula el crecimiento de tu inversión</p>
+</div>
+
+<div class="card">
+  <div class="field">
+    <label>Tipo de capitalización</label>
+    <div class="tabs">
+      <button class="tab active" onclick="setTab(this,'anual')">Anual</button>
+      <button class="tab" onclick="setTab(this,'mensual')">Mensual</button>
+      <button class="tab" onclick="setTab(this,'continua')">Continua</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Capital inicial</label>
+    <div class="input-wrap">
+      <span class="symbol">€</span>
+      <input type="number" id="capital" placeholder="10000" min="0">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>Tasa de interés</label>
+      <div class="input-wrap">
+        <input type="number" id="tasa" placeholder="7" min="0" max="100" step="0.1" style="padding-left:1rem">
+        <span class="unit">%</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Período</label>
+      <div class="input-wrap">
+        <input type="number" id="anios" placeholder="10" min="1" max="50" style="padding-left:1rem">
+        <span class="unit">años</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Aportación mensual (opcional)</label>
+    <div class="input-wrap">
+      <span class="symbol">€</span>
+      <input type="number" id="aportacion" placeholder="0" min="0">
+    </div>
+  </div>
+
+  <button class="calcular" onclick="calcular()">Calcular rentabilidad →</button>
+</div>
+
+<div class="results" id="results">
+  <div class="big-stat">
+    <div class="label">Capital final estimado</div>
+    <div class="value" id="res-final">—</div>
+    <div class="sub" id="res-sub">—</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="s-label">Capital invertido</div>
+      <div class="s-value" id="res-invertido">—</div>
+    </div>
+    <div class="stat-box profit">
+      <div class="s-label">Beneficio neto</div>
+      <div class="s-value" id="res-beneficio">—</div>
+    </div>
+    <div class="stat-box">
+      <div class="s-label">Rentabilidad total</div>
+      <div class="s-value" id="res-rentabilidad">—</div>
+    </div>
+    <div class="stat-box profit">
+      <div class="s-label">Rentabilidad anual</div>
+      <div class="s-value" id="res-anual">—</div>
+    </div>
+  </div>
+
+  <div class="chart-area">
+    <div class="chart-title">Evolución del capital por año</div>
+    <div class="bar-chart" id="chart"></div>
+  </div>
+</div>
+
+<script>
+  let tabMode = 'anual';
+
+  function setTab(el, mode) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    tabMode = mode;
+  }
+
+  function fmt(n) {
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+  }
+
+  function calcular() {
+    const C = parseFloat(document.getElementById('capital').value) || 0;
+    const r = parseFloat(document.getElementById('tasa').value) || 0;
+    const t = parseInt(document.getElementById('anios').value) || 0;
+    const m = parseFloat(document.getElementById('aportacion').value) || 0;
+
+    if (C <= 0 || r <= 0 || t <= 0) {
+      alert('Por favor, rellena capital, tasa y período.');
+      return;
+    }
+
+    const rate = r / 100;
+    let yearlyValues = [];
+
+    for (let y = 1; y <= t; y++) {
+      let val;
+      if (tabMode === 'anual') {
+        // Capital compuesto anual + aportaciones mensuales
+        val = C * Math.pow(1 + rate, y);
+        if (m > 0) {
+          val += m * 12 * ((Math.pow(1 + rate, y) - 1) / rate);
+        }
+      } else if (tabMode === 'mensual') {
+        const rm = rate / 12;
+        val = C * Math.pow(1 + rm, y * 12);
+        if (m > 0) {
+          val += m * ((Math.pow(1 + rm, y * 12) - 1) / rm);
+        }
+      } else { // continua
+        val = C * Math.exp(rate * y);
+        if (m > 0) {
+          val += m * 12 * ((Math.exp(rate * y) - 1) / rate);
+        }
+      }
+      yearlyValues.push(val);
+    }
+
+    const final = yearlyValues[t - 1];
+    const invertido = C + m * 12 * t;
+    const beneficio = final - invertido;
+    const rentTotal = ((final - invertido) / invertido) * 100;
+    const rentAnual = r; // la tasa ya es anual
+
+    document.getElementById('res-final').textContent = fmt(final);
+    document.getElementById('res-sub').textContent = `En ${t} años con interés ${tabMode}`;
+    document.getElementById('res-invertido').textContent = fmt(invertido);
+    document.getElementById('res-beneficio').textContent = fmt(beneficio);
+    document.getElementById('res-rentabilidad').textContent = rentTotal.toFixed(1) + '%';
+    document.getElementById('res-anual').textContent = r.toFixed(2) + '%';
+
+    // Chart
+    const chart = document.getElementById('chart');
+    chart.innerHTML = '';
+    const max = Math.max(...yearlyValues);
+    // Show up to 20 bars
+    const step = t <= 20 ? 1 : Math.ceil(t / 20);
+    for (let y = step; y <= t; y += step) {
+      const wrap = document.createElement('div');
+      wrap.className = 'bar-wrap';
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      const pct = (yearlyValues[y - 1] / max) * 100;
+      bar.style.height = '0%';
+      const lbl = document.createElement('div');
+      lbl.className = 'bar-year';
+      lbl.textContent = y;
+      wrap.appendChild(bar);
+      wrap.appendChild(lbl);
+      chart.appendChild(wrap);
+      setTimeout(() => bar.style.height = pct + '%', 50);
+    }
+
+    const res = document.getElementById('results');
+    res.classList.add('show');
+    res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Allow Enter key
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') calcular(); });
+</script>
+</body>
+</html>
